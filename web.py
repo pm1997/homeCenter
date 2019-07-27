@@ -13,7 +13,7 @@ from room import Room
 LEDS = {}
 def init_leds():
 	global LEDS
-	LEDS = {"green": 16, "orange": 3, "red": 18}
+	LEDS = {"green": 3, "orange": 5, "red": 7}
 	GPIO.setmode(GPIO.BOARD)
 	for led in LEDS:
 		print(led)
@@ -21,10 +21,14 @@ def init_leds():
 
 init_leds()
 
-r1 = Room(40, "Bad")
+r1 = Room(29, "Küche")
+r2 = Room(31, "Billiardzimmer")
+r3 = Room(33, "Klavierzimmer")
+r4 = Room(35, "Eisenbahnzimmer")
+r5 = Room(37, "Wirtschaftsraum")
 
-rooms = [ r1 ]
-config = {}
+rooms = [ r1, r2, r3, r4, r5 ]
+config = {"all_disabled": False}
 app = FlaskAPI(__name__)
 
 @app.route('/', methods=["GET"])
@@ -50,15 +54,15 @@ def get_config():
 	
 	config = {
 		 "rooms" : r_configs,
-		"all_disabled": False
+		"all_disabled": bool(config["all_disabled"])
 		}
 	return config
 
 @app.route('/setconfig/', methods=["GET","POST"])
 def set_config():
 	global config
-	if request.method == "POST":
-		config = request.data
+	if request.method == "POST" and Util.check_config(request.data):
+		config, _ = Util.harden_config_input(request.data)
 		print(f"{datetime.now()}: update config")
 		print(config)
 		global rooms
@@ -83,19 +87,24 @@ def api_led_control(color):
 
 def check_alarm_state():
 	get_config()
-	if config["all_disabled"]:
-		print("all rooms disabled")
+	global config
+	if bool(config["all_disabled"]):
 		Util.turn_led_on(LEDS["orange"])
+	else:
+		Util.turn_led_off(LEDS["orange"])
 	all_ok = True
+	all_closed = True
 	for r in config["rooms"]:
 		if not GPIO.input(r["room_gpio"]):
+			all_closed = False
 			Util.turn_led_off(LEDS["green"])
 			if r["alarm_on"] and not config["all_disabled"]:
-				print(f"{datetime.now()}: Alarm enabled and room open!")
+				print(f"{datetime.now()}: Alarm enabled and room {r['room_name']} open!")
 				Util.turn_led_on(LEDS["red"])
 				all_ok = False
 	if all_ok:
-		Util.turn_led_on(LEDS["green"])
+		if all_closed:
+			Util.turn_led_on(LEDS["green"])
 		Util.turn_led_off(LEDS["red"])
 
 def timer():
