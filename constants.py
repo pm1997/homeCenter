@@ -1,3 +1,5 @@
+# constants for later use
+
 ON = 1
 OFF = 0
 # PIN Section -----------------------

@@ -4,8 +4,9 @@ from constants import VALID_PINS
 class Util:
 
 	def check_string(str1):
+		# cut string at length 40
 		try:
-			return str(str1)
+			return ((str(str1))[:40] + '..') if len(str1) > 40 else str(str1)
 		except:
 			return "ERROR"
 
@@ -18,6 +19,7 @@ class Util:
 			GPIO.output(nr, 0)
 
 	def check_config(new_config):
+		# checl if valid config provided
 		try:
 			_, no_error = Util.harden_config_input(new_config)
 			return no_error
@@ -25,6 +27,7 @@ class Util:
 			return False
 
 	def harden_config_input(new_config):
+		# store new config secure
 		n_rooms = new_config["rooms"]
 		n_all_off = bool(new_config["all_disabled"])
 		r_config=[]
