@@ -1,14 +1,15 @@
 import RPi.GPIO as GPIO
 from constants import VALID_PINS, INVALID_PIN, OFF
+from util import Util
 
 class Room:
 
 	def __init__(self, pin, name, default_on=True, activated=True ):
 		if pin in VALID_PINS:
 			self._pin = pin
-			self._name = name
-			self._default_on = default_on
-			self._activated = activated
+			self._name = Util.check_string(name)
+			self._default_on = default_on == True
+			self._activated = activated == True
 			GPIO.setup(pin, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
 		else:
 			self._name = "ERROR"
@@ -33,7 +34,7 @@ class Room:
 			self._activated = self._default_on = False
 			self._pin = INVALID_PIN
 
-	def activate(self):
+	def activated(self):
 		return self._activated
 
 	def change_mode(self, newMode):
@@ -52,4 +53,4 @@ class Room:
 		return self._name
 
 	def change_name(self, new_name):
-		self._name = new_name
+		self._name = Util.check_string(new_name)
